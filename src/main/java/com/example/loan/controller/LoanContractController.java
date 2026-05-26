@@ -1,16 +1,12 @@
 package com.example.loan.controller;
 
 import com.example.loan.dao.entity.LoanContract;
-import com.example.loan.exception.ApplyIllegalException;
 import com.example.loan.exception.ContractIllegalException;
-import com.example.loan.service.LoanApplyService;
 import com.example.loan.service.LoanContractService;
 import com.example.loan.utils.ResponseResult;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/loan/contract")
@@ -25,5 +21,16 @@ public class LoanContractController {
         }else{
             throw new ContractIllegalException();
         }
+    }
+
+    /**
+     * 下载合同（根据合同ID）
+     * @param contractId
+     * @param response
+     */
+    @GetMapping("/download")
+    public ResponseResult download(@RequestParam Integer contractId, HttpServletResponse response) {
+        loanContractService.downloadContract(contractId, response);
+        return ResponseResult.success();
     }
 }
