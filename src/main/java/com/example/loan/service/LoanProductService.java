@@ -8,6 +8,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class LoanProductService {
@@ -38,6 +39,7 @@ public class LoanProductService {
     }
 
     @CacheEvict(cacheNames = "LoanProductCache",allEntries = true)
+    @Transactional
     public int deleteProduct(String name){
         if(loanProductRepository.existsByName(name)){
             loanProductRepository.deleteByName(name);
