@@ -10,13 +10,14 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Data
 @Entity
-@Table(name = "loan_apply")
+@Data
+@Table(name = "email")
 @EntityListeners(AuditingEntityListener.class)
-@NoArgsConstructor
 @AllArgsConstructor
-public class LoanApply {
+@NoArgsConstructor
+public class Email {
+
     @Id
     @GenericGenerator(
             name = "intSnowflakeGenerator",
@@ -26,29 +27,13 @@ public class LoanApply {
     private Integer id;
 
     private String name;
+    private String subject;
+    private String summary;
+    private String content;
 
-    @Column(name = "user_id")
-    private Integer userId;
-
-    @Column(name = "product_id")
-    private Integer productId;
-
-    @Column(name = "apply_quota")
-    private float applyQuota;
-
-    @Column(name = "apply_period")
-    private Integer applyPeriod;
-
-    @Column(name = "apply_time", updatable = false)
     @CreatedDate
-    private LocalDateTime applyTime;
+    private LocalDateTime date;
 
-    @Column(name = "apply_status")
-    private String applyStatus;
-
-    @Column(name = "refuse_reason")
-    private String refuseReason;
-
-    @Column(name = "repay_method")
-    private String repayMethod;
+    @Column(name = "avatar_color")
+    private String avatarColor;
 }

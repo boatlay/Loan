@@ -1,5 +1,6 @@
 package com.example.loan.controller;
 
+import com.example.loan.service.ReportService;
 import com.example.loan.service.UserPermissionService;
 import com.example.loan.service.aiService.AppConsultantService;
 import com.example.loan.service.aiService.ConsultantService;
@@ -23,6 +24,9 @@ public class AiController {
     @Autowired
     private UserPermissionService userPermissionService;
 
+    @Autowired
+    private ReportService reportService;
+
     @GetMapping(value = "/chat",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chat(@RequestParam String memoryId, @RequestParam String message){
         Flux<String> result=consultantService.streamingChat(memoryId,message);
@@ -41,5 +45,19 @@ public class AiController {
         String name= JwtUtils.getNameFromJwt(token);
         userPermissionService.crawl(name,message);
         return ResponseResult.success();
+    }
+
+    @PostMapping("/generate_report")
+    public ResponseResult<String> generateReport(@RequestHeader String token){
+        String name= JwtUtils.getNameFromJwt(token);
+        String result=reportService.generateReport(name);
+        return ResponseResult.success(200,"success",result);
+    }
+
+    @GetMapping("/get_report")
+    public ResponseResult<String> getReport(@RequestHeader String token){
+        String username= JwtUtils.getNameFromJwt(token);
+        String result=reportService.getReport(username);
+        return ResponseResult.success(200,"success",result);
     }
 }

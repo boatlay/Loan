@@ -30,4 +30,12 @@ public class UserQualificationController {
         userQualificationService.addUserQualification(userQualification,userAccount.getId());
         return ResponseResult.success(200,"success",userAccount.getId());
     }
+
+    @GetMapping
+    public ResponseResult<UserQualification> getUserQualification(String name){
+        if(userQualificationService.getUserQualification(name)==null){
+            return ResponseResult.error("用户还未填写",400,null);
+        }
+        return ResponseResult.success(200,"success",userQualificationService.getUserQualification(name));
+    }
 }

@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface UserQualificationRepository extends JpaRepository<UserQualification,Integer> {
 
     UserQualification findUserQualificationById(Integer id);
+
+    UserQualification findUserQualificationByName(String name);
 }
