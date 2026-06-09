@@ -24,29 +24,30 @@ public class AuditAccountController {
     private RedisService redisService;
 
     @PostMapping("/login")
-    public ResponseResult<Void> login(@RequestBody AuditAccount auditAccount, HttpServletRequest request){
+    public ResponseResult<String> login(@RequestBody AuditAccount auditAccount){
         if(auditAccountService.login(auditAccount)==0){
             throw new UserAccountNotFoundException();
         }else {
-            HttpSession session=request.getSession();
-            session.setAttribute("name",auditAccount.getName());
+//            HttpSession session=request.getSession();
+//            session.setAttribute("name",auditAccount.getName());
             String token= JwtUtils.createToken(auditAccount.getPersonality(),auditAccount.getName());
             redisService.set(auditAccount.getName()+":token",token,24, TimeUnit.HOURS);
-            return ResponseResult.success();
+            return ResponseResult.success(200,"success",token);
         }
     }
 
     @PutMapping("/modify")
-    public ResponseResult<Void> modify(@RequestBody AuditAccount auditAccount,HttpServletRequest request){
-        HttpSession session=request.getSession();
-        String name=(String) session.getAttribute("name");
+    public ResponseResult<String> modify(@RequestBody AuditAccount auditAccount,@RequestHeader String token){
+//        HttpSession session=request.getSession();
+//        String name=(String) session.getAttribute("name");
+        String name=JwtUtils.getNameFromJwt(token);
         AuditAccount auditAccount1=auditAccountService.modify(auditAccount,name);
 
-        session.setAttribute("name",auditAccount1.getName());
+//        session.setAttribute("name",auditAccount1.getName());
         redisService.delete(name+":token");
-        String token=JwtUtils.createToken(auditAccount1.getPersonality(),auditAccount1.getName());
-        redisService.set(auditAccount1.getName()+":token",token,24,TimeUnit.HOURS);
-        return ResponseResult.success();
+        String token1=JwtUtils.createToken(auditAccount1.getPersonality(),auditAccount1.getName());
+        redisService.set(auditAccount1.getName()+":token",token1,24,TimeUnit.HOURS);
+        return ResponseResult.success(200,"success",token1);
     }
 
     @PostMapping("/register")
