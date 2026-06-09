@@ -8,6 +8,8 @@ import com.example.loan.dao.entity.LoanApply;
 import com.example.loan.dao.entity.LoanProduct;
 import com.example.loan.dao.entity.UserAccount;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -65,5 +67,19 @@ public class LoanApplyService {
         }else{
             return null;
         }
+    }
+
+    public Page<LoanApply> getPage(Pageable pageable){
+        return loanApplyRepository.findAll(pageable);
+    }
+
+    public Integer updateApply(LoanApply loanApply){
+        LoanApply loanApply1=loanApplyRepository.findLoanApplyById(loanApply.getId());
+        loanApply1.setApplyStatus(loanApply.getApplyStatus());
+        if(loanApply.getApplyStatus().equals("已拒绝")){
+            loanApply1.setRefuseReason(loanApply.getRefuseReason());
+        }
+        loanApplyRepository.save(loanApply1);
+        return 1;
     }
 }

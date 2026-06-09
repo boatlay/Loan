@@ -15,4 +15,8 @@ public class UserQualificationService {
         userQualification.setId(id);
         userQualificationRepository.save(userQualification);
     }
+
+    public UserQualification getUserQualification(String name){
+        return userQualificationRepository.findUserQualificationByName(name);
+    }
 }
