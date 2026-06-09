@@ -14,7 +14,7 @@ public interface LoanProductRepository extends JpaRepository<LoanProduct,Integer
 
     LoanProduct getByName(String name);
 
-    Void deleteByName(String name);
+    void deleteByName(String name);
 
     @Query(value = "select * from  loan_product " +
             "where name like concat('%',?1,'%') or repay_method like concat('%',?1,'%')",nativeQuery = true)

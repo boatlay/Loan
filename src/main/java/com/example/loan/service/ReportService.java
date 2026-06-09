@@ -7,6 +7,7 @@ import com.example.loan.dao.entity.UserAccount;
 import com.example.loan.dao.entity.UserInformation;
 import com.example.loan.dao.entity.UserPrivate;
 import com.example.loan.service.aiService.AIReportService;
+import com.example.loan.service.aiService.ConstantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,9 @@ public class ReportService {
 
     @Autowired
     private AIReportService reportService;
+
+    @Autowired
+    private ConstantService constantService;
 
     @Autowired
     private RedisService redisService;
@@ -49,6 +53,25 @@ public class ReportService {
             return (String) redisService.get(userName+"report");
         }else {
             return generateReport(userName);
+        }
+    }
+
+    public String generateAdminReport(Integer userId){
+        UserAccount userAccount=userAccountRepository.findUserAccountById(userId);
+        String userName=userAccount.getName();
+        UserInformation userInformation=userInformationRepository.getUserInformationById(userId);
+        Integer score=userInformation.getCreditScore();
+        String message="用户信用分是"+score+"，用户昵称是"+userName;
+        String result=constantService.chat(message);
+        redisService.set(userName+"AdminReport",result,24, TimeUnit.HOURS);
+        return result;
+    }
+
+    public String getAdminReport(Integer userId){
+        if(redisService.get(userId+"AdminReport")!=null){
+            return (String) redisService.get(userId+"AdminReport");
+        }else {
+            return generateAdminReport(userId);
         }
     }
 }

@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/ai")
 public class AiController {
@@ -58,6 +60,20 @@ public class AiController {
     public ResponseResult<String> getReport(@RequestHeader String token){
         String username= JwtUtils.getNameFromJwt(token);
         String result=reportService.getReport(username);
+        return ResponseResult.success(200,"success",result);
+    }
+
+    @PostMapping("/admin/generate_report")
+    public ResponseResult<String> generateAdminReport(@RequestBody Map map){
+        Integer userId=(Integer)map.get("user_id");
+        String result=reportService.generateAdminReport(userId);
+        return ResponseResult.success(200,"success",result);
+    }
+
+    @PostMapping("/admin/get_report")
+    public ResponseResult<String> getAdminReport(@RequestBody Map map){
+        Integer userId=(Integer)map.get("user_id");
+        String result=reportService.getAdminReport(userId);
         return ResponseResult.success(200,"success",result);
     }
 }

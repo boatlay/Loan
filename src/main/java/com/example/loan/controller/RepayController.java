@@ -89,4 +89,19 @@ public class RepayController {
             throw new RepayOverdueRecordNotFoundException();
         }
     }
+
+    @GetMapping("/adamin/overdue")
+    public ResponseResult<List> getOverdueRecordByName(String name){
+//        HttpSession session = httpServletRequest.getSession();
+//        String name = (String) session.getAttribute("name");
+//        String name= URLDecoder.decode(httpServletRequest.getHeader("name"),"UTF-8");
+
+        List<RepayOverdueRecord> list = repayOverdueRecordService.getOverdueRecordByName(name);
+
+        if(list.size() != 0){
+            return ResponseResult.success(200, "success", list);
+        }else{
+            throw new RepayOverdueRecordNotFoundException();
+        }
+    }
 }

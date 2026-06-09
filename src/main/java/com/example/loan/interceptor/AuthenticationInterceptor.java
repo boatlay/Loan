@@ -19,6 +19,9 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if("GET".equals(request.getMethod())){
+            return true;
+        }
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
@@ -30,9 +33,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         if(redisService.hasKey(name+":token")){
             token=(String) redisService.get(name+":token");
         }
-        if("GET".equals(request.getMethod())){
-            return true;
-        }
+
         if(token==null|| !JwtUtils.checkToken(token)) {
             response.setContentType("application/json;charset=utf-8");
             Map<String, Object> result = new HashMap<>();
