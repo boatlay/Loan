@@ -22,6 +22,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         if("GET".equals(request.getMethod())){
             return true;
         }
+
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
@@ -45,6 +46,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             response.getWriter().write(json);
             return false;
         }
+
         return true;
     }
 }
