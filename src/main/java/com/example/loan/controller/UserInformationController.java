@@ -9,6 +9,10 @@ import com.example.loan.utils.ResponseResult;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -40,5 +44,18 @@ public class UserInformationController {
             return ResponseResult.success();
         }
         return ResponseResult.error("你还没有完善过个人资料",404,null);
+    }
+
+    @GetMapping("/adamin/information")
+    public ResponseResult<PagedModel<UserInformation>> getPage(@PageableDefault(size = 20,sort = "id") Pageable pageable){
+        Page<UserInformation> pages;
+        pages=userInformationService.getPage(pageable);
+
+        PagedModel<UserInformation> pagedModel=new PagedModel<>(pages);
+        if(pages==null){
+            return ResponseResult.error("暂时还没有用户信息",400,null);
+        }else {
+            return ResponseResult.success(200,"success",pagedModel);
+        }
     }
 }

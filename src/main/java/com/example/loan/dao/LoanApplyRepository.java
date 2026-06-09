@@ -13,5 +13,5 @@ public interface LoanApplyRepository extends JpaRepository<LoanApply,Integer> {
     Boolean existsByUserId(Integer userId);
     List<LoanApply> getByUserId(Integer userId);
     void deleteByUserId(Integer userId);
-
+    LoanApply findLoanApplyById(Integer id);
 }
