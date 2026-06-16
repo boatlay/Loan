@@ -75,7 +75,6 @@ public class OverdueMonitorService {
                 RepayPlan newPlan = Calculate.toNextPlan(plan);
                 newPlan.setOveredPlanId(plan.getOveredPlanId());
                 newPlan.setRestPrincipal(plan.getRestPrincipal());
-                newPlan.setStatus(false);
                 repayPlanRepository.save(newPlan);
 
 

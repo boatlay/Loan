@@ -265,8 +265,8 @@ public class Calculate {
         nextRepayPlan.setStartTime(repayPlan.getEndTime());
         //下一期计划截止时间为其本身开始时间一月期之后
         nextRepayPlan.setEndTime(TimeCalculator.toOneMonthNextDateTime(nextRepayPlan.getStartTime()));
-        //下一期计划业务处理状态初始为否
-        nextRepayPlan.setStatus(false);
+        //下一期计划业务处理状态初始为是，代表业务还需要处理
+        nextRepayPlan.setStatus(true);
 
         return nextRepayPlan;
     }
