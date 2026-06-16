@@ -31,7 +31,7 @@ public class UserInformation {
     private String phoneNumber;
 
     private String email;
-    private String adress;
+    private String address;
 
     @Column(name = "add_date",updatable = false)
     @CreatedDate

@@ -49,5 +49,5 @@ public class RepayOverdueRecord {
 
     //本次扣减信用分
     @Column(name = "credit_decrease")
-    private float creditDecrease;
+    private Integer creditDecrease;
 }

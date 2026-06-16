@@ -64,11 +64,12 @@ public class LoanContractService {
     /**
      * 根据合同ID生成 Word 文件并写入响应流
      */
-    public void downloadContract(Integer contractId, HttpServletResponse response) {
+    public void downloadContract(Integer applyId, HttpServletResponse response) {
         try {
-            // 1. 查询合同数据
-            LoanContract contract = loanContractRepository.findById(contractId)
-                    .orElseThrow(() -> new RuntimeException("合同不存在，ID: " + contractId));
+            LoanContract contract = loanContractRepository.getByApplyId(applyId);
+            if (contract == null) {
+                throw new RuntimeException("合同不存在，applyId: " + applyId);
+            }
 
             // 2. 查询关联的申请信息
             LoanApply loanApply = loanApplyRepository.findById(contract.getApplyId())
@@ -98,7 +99,7 @@ public class LoanContractService {
             // 5. 设置响应头
             response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
-            String fileName = "借款合同_" + contractId + "_" + System.currentTimeMillis() + ".docx";
+            String fileName = "借款合同_" + contract.getId() + "_" + System.currentTimeMillis() + ".docx";
             String encodedFileName = URLEncoder.encode(fileName, "UTF-8")
                     .replaceAll("\\+", "%20");
             response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName);

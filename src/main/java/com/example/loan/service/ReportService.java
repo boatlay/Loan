@@ -6,6 +6,7 @@ import com.example.loan.dao.UserPrivateRepository;
 import com.example.loan.dao.entity.UserAccount;
 import com.example.loan.dao.entity.UserInformation;
 import com.example.loan.dao.entity.UserPrivate;
+import com.example.loan.exception.UserDataIncompleteException;
 import com.example.loan.service.aiService.AIReportService;
 import com.example.loan.service.aiService.ConstantService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,11 +38,14 @@ public class ReportService {
     public String generateReport(String userName){
         UserAccount userAccount=userAccountRepository.getUserAccountByName(userName);
         UserInformation userInformation=userInformationRepository.getUserInformationById(userAccount.getId());
+        if (userInformation == null) {
+            throw new UserDataIncompleteException();
+        }
         Integer score=userInformation.getCreditScore();
         UserPrivate userPrivate=userPrivateRepository.findUserPrivateById(userAccount.getId());
-        String contactPrivate=userPrivate.getContactPrivate();
-        String locationPrivate=userPrivate.getLocationPrivate();
-        String bugPrivate=userPrivate.getBugPrivate();
+        String contactPrivate = userPrivate != null ? userPrivate.getContactPrivate() : "无";
+        String locationPrivate = userPrivate != null ? userPrivate.getLocationPrivate() : "无";
+        String bugPrivate = userPrivate != null ? userPrivate.getBugPrivate() : "无";
         String message="用户信用分是"+score+"，用户昵称是"+userName;
         String result=reportService.chat(message);
         redisService.set(userName+"report",result,24, TimeUnit.HOURS);
@@ -60,10 +64,13 @@ public class ReportService {
         UserAccount userAccount=userAccountRepository.findUserAccountById(userId);
         String userName=userAccount.getName();
         UserInformation userInformation=userInformationRepository.getUserInformationById(userId);
+        if (userInformation == null) {
+            throw new UserDataIncompleteException();
+        }
         Integer score=userInformation.getCreditScore();
         String message="用户信用分是"+score+"，用户昵称是"+userName;
         String result=constantService.chat(message);
-        redisService.set(userName+"AdminReport",result,24, TimeUnit.HOURS);
+        redisService.set(userId+"AdminReport",result,24, TimeUnit.HOURS);
         return result;
     }
 

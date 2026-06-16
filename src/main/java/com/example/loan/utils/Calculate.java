@@ -3,6 +3,8 @@ package com.example.loan.utils;
 import com.example.loan.dao.*;
 import com.example.loan.dao.entity.*;
 import com.example.loan.exception.RepayMethodIllegalException;
+import com.example.loan.dao.UserInformationRepository;
+import com.example.loan.dao.entity.UserInformation;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,10 @@ import java.util.Map;
 public class Calculate {
     //逾期罚息倍率
     private static final BigDecimal PUNISH_RATE = BigDecimal.valueOf(1.5);
+    //逾期信用扣分：第一期基础扣分
+    private static final float CREDIT_DECREASE_BASE_SCORE = 5f;
+    //逾期信用扣分：零散天数每日扣分率
+    private static final float CREDIT_DECREASE_DAILY_RATE = 0.1f;
 
     private static RepayPlanRepository repayPlanRepository;
     private static RepayRecordRepository repayRecordRepository;
@@ -27,6 +33,7 @@ public class Calculate {
     private static LoanContractRepository loanContractRepository;
     private static LoanProductRepository loanProductRepository;
     private static UserAccountRepository userAccountRepository;
+    private static UserInformationRepository userInformationRepository;
 
     @Autowired
     private RepayPlanRepository autowiredRepayPlanRepo;
@@ -40,6 +47,8 @@ public class Calculate {
     private LoanProductRepository autowiredLoanProductRepo;
     @Autowired
     private UserAccountRepository autowiredUserAccountRepo;
+    @Autowired
+    private UserInformationRepository autowiredUserInfoRepo;
 
     @PostConstruct
     public void init() {
@@ -49,6 +58,7 @@ public class Calculate {
         loanContractRepository = this.autowiredLoanContractRepo;
         loanProductRepository = this.autowiredLoanProductRepo;
         userAccountRepository = this.autowiredUserAccountRepo;
+        userInformationRepository = this.autowiredUserInfoRepo;
     }
 
     /**
@@ -109,6 +119,7 @@ public class Calculate {
         repayPlan.setRestPrincipal(total.floatValue());
         repayPlan.setStartTime(LocalDateTime.now());
         repayPlan.setEndTime(TimeCalculator.toOneMonthNextDateTime(repayPlan.getStartTime()));
+        repayPlan.setStatus(true);
     }
 
     /**
@@ -254,6 +265,8 @@ public class Calculate {
         nextRepayPlan.setStartTime(repayPlan.getEndTime());
         //下一期计划截止时间为其本身开始时间一月期之后
         nextRepayPlan.setEndTime(TimeCalculator.toOneMonthNextDateTime(nextRepayPlan.getStartTime()));
+        //下一期计划业务处理状态初始为否
+        nextRepayPlan.setStatus(false);
 
         return nextRepayPlan;
     }
@@ -267,20 +280,59 @@ public class Calculate {
     public static RepayOverdueRecord toRepayOverdueRecord(RepayRecord repayRecord) {
         //得到还款记录当期的还款计划
         RepayPlan repayPlan = repayPlanRepository.getReferenceById(repayRecord.getPlanId());
-        //得到当期还款计划的上一期已支付计划
-        RepayPlan overedPlan = repayPlanRepository.getReferenceById(repayPlan.getOveredPlanId());
+
+        LocalDateTime startTime;
+        int lastPeriod;
+        if (repayPlan.getOveredPlanId() != null) {
+            //得到当期还款计划的上一期已支付计划
+            RepayPlan overedPlan = repayPlanRepository.getReferenceById(repayPlan.getOveredPlanId());
+            startTime = overedPlan.getEndTime();
+            lastPeriod = overedPlan.getCurrentPeriod();
+        } else {
+            //第1期逾期，没有上一期已支付计划
+            startTime = repayPlan.getStartTime();
+            lastPeriod = 0;
+        }
 
         RepayOverdueRecord repayOverdueRecord = new RepayOverdueRecord();
         repayOverdueRecord.setContractId(repayPlan.getContractId());
         repayOverdueRecord.setUserId(repayRecord.getUserId());
-        repayOverdueRecord.setStartTime(overedPlan.getEndTime());
+        repayOverdueRecord.setStartTime(startTime);
         repayOverdueRecord.setEndTime(repayRecord.getRepayTime());
         //填写逾期期数
-        repayOverdueRecord.setOverduePeriod(repayPlan.getCurrentPeriod() - overedPlan.getCurrentPeriod());
+        repayOverdueRecord.setOverduePeriod(repayPlan.getCurrentPeriod() - lastPeriod - 1);
         //填写逾期总额
         repayOverdueRecord.setOverdueAll(repayRecord.getOverdueMoney() + repayRecord.getOverduePunish());
-        //todo: 填写扣减信誉分规则，需与信誉分计算规则联动
-        repayOverdueRecord.setCreditDecrease(0);
+
+        // 逾期信用分扣减
+        // 公式: creditDecrease = 期数累进扣分 + 零散天数扣分
+        //
+        // 1 期数累进扣分: 连续逾期期数越多，后续每期扣分越重（等差数列）
+        //    第1期扣 baseScore，第2期扣 2×baseScore，第3期扣 3×baseScore ...
+        //    前 n 期合计 = baseScore × n × (n+1) / 2
+        //
+        // 2 零散天数扣分: 超出完整期数（30天/期）的零散天数，按日另行扣分
+        //    extraDays = max(0, 总逾期天数 − 完整期数天数)
+
+        int overduePeriod = repayPlan.getCurrentPeriod() - lastPeriod - 1;
+        long totalOverdueDays = TimeCalculator.calNumToTargetDay(startTime);
+
+        long fullPeriodDays = overduePeriod * 30L;
+        long extraDays = Math.max(0, totalOverdueDays - fullPeriodDays);
+
+        int periodPenalty = (int) (CREDIT_DECREASE_BASE_SCORE * overduePeriod * (overduePeriod + 1) / 2f);
+        int daysPenalty = (int) (extraDays * CREDIT_DECREASE_DAILY_RATE);
+        int creditDecrease = periodPenalty + daysPenalty;
+
+        // 持久化：更新用户信用分，不低于0
+        UserInformation userInfo = userInformationRepository.getUserInformationById(repayRecord.getUserId());
+        if (userInfo != null) {
+            int newScore = Math.max(0, userInfo.getCreditScore() - creditDecrease);
+            userInfo.setCreditScore(newScore);
+            userInformationRepository.save(userInfo);
+        }
+
+        repayOverdueRecord.setCreditDecrease(creditDecrease);
 
         return repayOverdueRecord;
     }

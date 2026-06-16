@@ -49,7 +49,7 @@ public class UserService {
 
     public String judgeEmailCode(String code,String email){
         String code1=(String) redisService.get(email+"code");
-        if(code==null){
+        if(code==null || code.isEmpty()){
             return "验证码不能为空";
         }
         if(!code.equals(code1)){

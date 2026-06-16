@@ -30,6 +30,10 @@ public class ReportTool {
         UserAccount userAccount=userAccountRepository.getUserAccountByName(username);
         RiskModelExercise exercise=riskModelExerciseRepository.findRiskModelExerciseById(userAccount.getId());
         Map<String,Object> map=new HashMap();
+        if (exercise == null) {
+            map.put("错误","该用户暂无风控评分数据，请先计算信用分");
+            return map;
+        }
         map.put("用户年龄",exercise.getAge());
         map.put("用户银行卡状态",exercise.getBank_card_status());
         map.put("用户婚姻状况",exercise.getMarriage_status());

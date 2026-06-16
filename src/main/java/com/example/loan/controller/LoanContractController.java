@@ -24,13 +24,13 @@ public class LoanContractController {
     }
 
     /**
-     * 下载合同（根据合同ID）
-     * @param contractId
+     * 下载合同（根据申请ID）
+     * @param applyId
      * @param response
      */
     @GetMapping("/download")
-    public ResponseResult download(@RequestParam Integer contractId, HttpServletResponse response) {
-        loanContractService.downloadContract(contractId, response);
+    public ResponseResult download(@RequestParam Integer applyId, HttpServletResponse response) {
+        loanContractService.downloadContract(applyId, response);
         return ResponseResult.success();
     }
 }

@@ -42,7 +42,7 @@ public class LoanApplyService {
         && loanApply.getApplyQuota() >= loanProduct.getMinQuota()
         && loanApply.getApplyQuota() <= loanProduct.getMaxQuota()
         && loanApply.getApplyPeriod() >= loanProduct.getMinPeriod()
-        && loanApply.getApplyPeriod() <= loanProduct.getMaxQuota()){
+        && loanApply.getApplyPeriod() <= loanProduct.getMaxPeriod()){
             loanApply.setApplyStatus("审核中");
             loanApply.setRefuseReason("未拒绝");
 

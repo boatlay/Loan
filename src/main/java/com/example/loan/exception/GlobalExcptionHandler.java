@@ -56,4 +56,9 @@ public class GlobalExcptionHandler {
 
     @ExceptionHandler(RepayException.class)
     public ResponseResult<Void> repayException(RepayException e) { return e.error(null); }
+
+    @ExceptionHandler(UserDataIncompleteException.class)
+    public ResponseResult<Void> userDataIncomplete(UserDataIncompleteException e) {
+        return e.error(null);
+    }
 }
