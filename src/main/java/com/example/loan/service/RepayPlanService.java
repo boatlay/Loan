@@ -6,6 +6,7 @@ import com.example.loan.utils.Calculate;
 import com.example.loan.utils.Pay;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -92,6 +93,7 @@ public class RepayPlanService {
      * @param repayPlan
      * @return
      */
+    @Transactional
     public boolean repay(RepayPlan repayPlan, String repayMethod){
         //根据repayPlan取得LoanApply，从而取得总期数
         Integer contractId = repayPlan.getContractId();
@@ -111,7 +113,7 @@ public class RepayPlanService {
         }
 
         if(Pay.pay(all, repayMethod)){//支付成功
-            //生成还款记录
+            //构建还款记录（暂不保存）
             RepayRecord repayRecord = new RepayRecord();
             repayRecord.setPlanId(repayPlan.getId());
             repayRecord.setUserId(repayPlan.getUserId());
@@ -128,6 +130,12 @@ public class RepayPlanService {
                 repayRecord.setOverduePunish(0);
             }
             repayRecord.setRepayAll(all);
+
+            //如果支付包括了逾期应付和罚息，则生成还款逾期记录并保存
+            if(map != null){
+                RepayOverdueRecord repayOverdueRecord = Calculate.toRepayOverdueRecord(repayRecord);
+                repayOverdueRecordRepository.save(repayOverdueRecord);
+            }
             //保存还款记录
             repayRecordRepository.save(repayRecord);
 
@@ -144,14 +152,8 @@ public class RepayPlanService {
                 businessSettlementRepository.save(businessSettlement);
             }
 
-            //如果是支付包括了逾期应付和罚息，则还要生成还款逾期记录并保存
-            if(map != null){
-                RepayOverdueRecord repayOverdueRecord = Calculate.toRepayOverdueRecord(repayRecord);
-                repayOverdueRecordRepository.save(repayOverdueRecord);
-            }
-
             //将当期计划的业务状态设置成false
-            repayPlan.setStatus(true);
+            repayPlan.setStatus(false);
             repayPlanRepository.save(repayPlan);
 
             return true;

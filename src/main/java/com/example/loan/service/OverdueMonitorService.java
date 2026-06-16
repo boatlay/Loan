@@ -6,6 +6,7 @@ import com.example.loan.utils.Calculate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,6 +33,7 @@ public class OverdueMonitorService {
      * 每5秒执行一次，检查并处理逾期的还款计划
      */
     @Scheduled(cron = "*/5 * * * * *")
+    @Transactional
     public void checkAndHandleOverduePlans() {
         //查询所有已逾期且依旧开启业务的还款计划，装到List overduePlans中
         LocalDateTime now = LocalDateTime.now();
@@ -58,7 +60,7 @@ public class OverdueMonitorService {
 
                 //取得是否逾期判断返回的map键值对集合
                 Map<String, Float> map = Calculate.isOverdue(plan);
-                //要支付的总额
+                //要支付的总额（含逾期应还、逾期罚息、本期应还）
                 float all;
                 if(map != null){//有逾期
                     all = map.get("overdueMoney") + map.get("overduePunish") + plan.getPriIntAll();
@@ -73,6 +75,7 @@ public class OverdueMonitorService {
                 RepayPlan newPlan = Calculate.toNextPlan(plan);
                 newPlan.setOveredPlanId(plan.getOveredPlanId());
                 newPlan.setRestPrincipal(plan.getRestPrincipal());
+                newPlan.setStatus(false);
                 repayPlanRepository.save(newPlan);
 
 
